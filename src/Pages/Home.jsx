@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
-import { Card, Container, Row, Col } from 'react-bootstrap';
+import { Card, Container, Row, Col, Button, Badge } from 'react-bootstrap';
 
 function Home() {
-  const [getdata, setData] = useState(null); // State to hold API data
-  const [loading, setLoading] = useState(true); // State for loading status
-  const [error, setError] = useState(null); // State for errors
+  const [getdata, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get('https://otruyenapi.com/v1/api/home');
-        console.log('API Response:', response.data); // Debug API response
-        setData(response.data); // Set the `data` property from the API response
+        console.log('API Response:', response.data);
+        setData(response.data);
         setLoading(false);
       } catch (error) {
-        setError(error.message); // Capture error message
+        setError(error.message);
         setLoading(false);
       }
     };
 
-    fetchData(); // Call the fetch function
+    fetchData();
   }, []);
 
   if (loading) return <p>Loading...</p>;
@@ -29,7 +29,11 @@ function Home() {
 
   // Handle case where `getdata` or its nested properties are missing
   const seoTitle = getdata?.data?.data?.seoOnPage?.titleHead || 'Default Title';
-  const description = getdata?.data?.data?.seoOnPage?.descriptionHead || 'No description available.';
+  const description =
+    getdata?.data?.data?.seoOnPage?.descriptionHead ||
+    'No description available.';
+
+  const items = getdata?.data?.data?.items || []; // Assuming API has `items` array
 
   return (
     <>
@@ -45,6 +49,41 @@ function Home() {
               </Card.Body>
             </Card>
           </Col>
+        </Row>
+
+        {/* Dynamic Cards */}
+        <Row className="mt-4">
+          {items.length > 0 ? (
+            items.map((item, index) => (
+              <Col key={index} md={4} className="mb-4">
+                <Card>
+                  <Card.Img
+                    variant="top"
+                    src={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                    alt={item.name || 'Card Image'}
+                  />
+                  <Card.Body>
+                    <Card.Title>{item.name || 'No Title'}</Card.Title>
+                    <Card.Text>Updated At: {item.updatedAt || 'N/A'}</Card.Text>
+                    <Card.Text>
+                      {item.category && item.category.length > 0 ? (
+                        item.category.map((cat, idx) => (
+                          <Badge bg="info" key={idx} className="me-1">
+                            {cat.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Badge bg="secondary">Others</Badge>
+                      )}
+                    </Card.Text>
+                    <Button variant="primary">View Details</Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <p>No items available.</p>
+          )}
         </Row>
       </Container>
     </>
